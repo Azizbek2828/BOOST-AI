@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+// 🔹 Yangilangan Firebase Konfiguratsiyasi
 const firebaseConfig = {
   apiKey: "AIzaSyAxZ-mSgJhuTdGcH3T4oJym3qjGso71keM",
   authDomain: "user1111-c84a0.firebaseapp.com",
@@ -8,7 +9,8 @@ const firebaseConfig = {
   projectId: "user1111-c84a0",
   storageBucket: "user1111-c84a0.firebasestorage.app",
   messagingSenderId: "901723757936",
-  appId: "1:901723757936:web:d1f18c83c721edfb0c03b5"
+  appId: "1:901723757936:web:c94a330b79916b6b0c03b5",
+  measurementId: "G-W1WPZHRJX8"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -17,21 +19,20 @@ const db = getDatabase(app);
 const tg = window.Telegram.WebApp;
 const userData = tg.initDataUnsafe.user;
 
-// Foydalanuvchi ma'lumotlarini yuklash
 if (userData) {
     const userId = userData.id;
     document.getElementById('user-name').innerText = userData.first_name;
     document.getElementById('user-id-text').innerText = "ID: " + userId;
     if (userData.photo_url) document.getElementById('user-photo').src = userData.photo_url;
 
-    // 1. Balansni bazadan olish (Realtime)
+    // 1. Balansni realtime olish
     const balanceRef = ref(db, 'users/' + userId + '/balance');
     onValue(balanceRef, (snapshot) => {
         const balance = snapshot.val() || 0;
         document.getElementById('balance-amount').innerText = balance;
     });
 
-    // 2. Bazadagi jami vazifalar sonini hisoblash
+    // 2. Vazifalar sonini hisoblash
     const tasksRef = ref(db, 'tasks');
     onValue(tasksRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -41,7 +42,6 @@ if (userData) {
             document.getElementById('active-tasks-count').innerText = "0";
         }
     });
-
 } else {
     document.getElementById('user-name').innerText = "Test User";
 }
