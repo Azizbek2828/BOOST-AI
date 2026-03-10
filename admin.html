@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOOST AI - Admin Panel</title>
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="background-blobs"></div>
+
+    <div class="container">
+        <header class="glass-card user-info">
+            <div class="user-details">
+                <i class="fas fa-user-shield" style="font-size: 24px; color: #e11d48;"></i>
+                <h3 style="margin-left: 10px;">Admin Panel</h3>
+            </div>
+        </header>
+
+        <div class="glass-card">
+            <p style="margin-bottom: 15px; color: #94a3b8;">Foydalanuvchiga tanga yuborish</p>
+            
+            <div class="input-group" style="margin-bottom: 15px; text-align: left;">
+                <label style="display:block; margin-bottom: 8px; font-size: 14px;">Foydalanuvchi Telegram ID:</label>
+                <input type="number" id="target-id" placeholder="Masalan: 12345678" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none;">
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px; text-align: left;">
+                <label style="display:block; margin-bottom: 8px; font-size: 14px;">Tanga miqdori:</label>
+                <input type="number" id="coin-amount" placeholder="Miqdorni kiriting" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none;">
+            </div>
+
+            <button onclick="sendCoins()" id="btn-send" class="glass-card" style="width: 100%; background: linear-gradient(90deg, #e11d48, #f43f5e); border: none; color: white; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px;">
+                Tanga yuborish
+            </button>
+        </div>
+
+        <p style="text-align: center; font-size: 12px; color: #64748b;">
+            Eslatma: ID raqam bazada mavjud bo'lishi kerak.
+        </p>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
