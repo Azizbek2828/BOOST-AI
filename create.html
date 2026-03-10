@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOOST AI - Vazifa Yaratish</title>
+    <link rel="stylesheet" href="home.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="background-blobs"></div>
+
+    <div class="container">
+        <header class="glass-card user-info">
+            <div class="user-details">
+                <i class="fas fa-plus-circle" style="font-size: 24px; color: #3b82f6;"></i>
+                <h3 style="margin-left: 10px;">Vazifa Yaratish</h3>
+            </div>
+            <div class="balance-badge">
+                <i class="fas fa-coins"></i>
+                <span id="balance-amount">0</span>
+            </div>
+        </header>
+
+        <div class="glass-card">
+            <p style="margin-bottom: 15px; color: #94a3b8;">Kanal orqali obunachi to'plang</p>
+            
+            <div class="input-group" style="margin-bottom: 20px; text-align: left;">
+                <label style="display:block; margin-bottom: 8px; font-size: 14px;">Kanal Usernamesi:</label>
+                <input type="text" id="channel-username" placeholder="@username" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none;">
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px; text-align: left;">
+                <label style="display:block; margin-bottom: 8px; font-size: 14px;">Obunachilar soni (1 ta = 4 tanga):</label>
+                <input type="number" id="subs-count" value="1" min="1" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none;">
+            </div>
+
+            <div id="total-price" style="margin-bottom: 20px; font-weight: bold; color: #f59e0b;">
+                Jami xarajat: 4 tanga
+            </div>
+
+            <button onclick="publishTask()" id="btn-create" class="glass-card" style="width: 100%; background: linear-gradient(90deg, #3b82f6, #22c55e); border: none; color: white; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px;">
+                Vazifani Joylash
+            </button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Asosiy</span>
+        </a>
+        <a href="earn.html" class="nav-item">
+            <i class="fas fa-tasks"></i>
+            <span>Bajarish</span>
+        </a>
+        <a href="create.html" class="nav-item active">
+            <i class="fas fa-plus-circle"></i>
+            <span>Yaratish</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profil</span>
+        </a>
+    </nav>
+
+    <script type="module" src="create.js"></script>
+</body>
+</html>
