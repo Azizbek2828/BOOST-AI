@@ -3,45 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOOST AI - Admin Panel</title>
+    <title>ADMIN PANEL - BOOST AI</title>
     <link rel="stylesheet" href="home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <div class="background-blobs"></div>
-
-    <div class="container">
-        <header class="glass-card user-info">
-            <div class="user-details">
-                <i class="fas fa-user-shield" style="font-size: 24px; color: #e11d48;"></i>
-                <h3 style="margin-left: 10px;">Admin Panel</h3>
-            </div>
-        </header>
-
-        <div class="glass-card">
-            <p style="margin-bottom: 15px; color: #94a3b8;">Foydalanuvchiga tanga yuborish</p>
+    <div class="container" style="padding-top: 50px;">
+        <div class="glass-card" style="text-align: center;">
+            <h2 style="color: #f43f5e; margin-bottom: 20px;">BOOST AI ADMIN</h2>
             
-            <div class="input-group" style="margin-bottom: 15px; text-align: left;">
-                <label style="display:block; margin-bottom: 8px; font-size: 14px;">Foydalanuvchi Telegram ID:</label>
-                <input type="number" id="target-id" placeholder="Masalan: 12345678" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none;">
-            </div>
+            <input type="number" id="tid" placeholder="User ID" style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #333; background: #000; color: #fff;">
+            
+            <input type="number" id="amt" placeholder="Tanga miqdori" style="width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #333; background: #000; color: #fff;">
 
-            <div class="input-group" style="margin-bottom: 20px; text-align: left;">
-                <label style="display:block; margin-bottom: 8px; font-size: 14px;">Tanga miqdori:</label>
-                <input type="number" id="coin-amount" placeholder="Miqdorni kiriting" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none;">
-            </div>
-
-            <button onclick="sendCoins()" id="btn-send" class="glass-card" style="width: 100%; background: linear-gradient(90deg, #e11d48, #f43f5e); border: none; color: white; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px;">
-                Tanga yuborish
+            <button id="sendBtn" style="width: 100%; padding: 15px; background: red; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                TANGA YUBORISH
             </button>
+            <p id="out" style="margin-top: 15px; font-size: 14px; color: yellow;"></p>
         </div>
-
-        <p style="text-align: center; font-size: 12px; color: #64748b;">
-            Eslatma: ID raqam bazada mavjud bo'lishi kerak.
-        </p>
     </div>
 
-    <script type="module" src="admin.js"></script>
+    <script>
+        // 1. To'g'ridan-to'g'ri sozlash
+        const cfg = {
+            apiKey: "AIzaSyAxZ-mSgJhuTdGcH3T4oJym3qjGso71keM",
+            authDomain: "user1111-c84a0.firebaseapp.com",
+            databaseURL: "https://user1111-c84a0-default-rtdb.firebaseio.com",
+            projectId: "user1111-c84a0",
+            storageBucket: "user1111-c84a0.firebasestorage.app",
+            messagingSenderId: "901723757936",
+            appId: "1:901723757936:web:c94a330b79916b6b0c03b5"
+        };
+
+        firebase.initializeApp(cfg);
+        const database = firebase.database();
+
+        document.getElementById('sendBtn').onclick = async function() {
+            const id = document.getElementById('tid').value;
+            const amount = parseInt(document.getElementById('amt').value);
+            const out = document.getElementById('out');
+            const btn = this;
+
+            if(!id || !amount) return alert("To'ldiring!");
+
+            btn.disabled = true;
+            btn.innerText = "ALOKA O'RNATILMOQDA...";
+            out.innerText = "Kuting...";
+
+            try {
+                // Ma'lumotni olish uchun "timeout" qo'shamiz (agar baza javob bermasa)
+                const userRef = database.ref('users/' + id);
+                
+                out.innerText = "Bazadan foydalanuvchi qidirilmoqda...";
+                const snap = await userRef.once('value');
+                
+                let current = 0;
+                if(snap.exists()) {
+                    current = snap.val().balance || 0;
+                }
+
+                out.innerText = "Balans yangilanmoqda...";
+                await userRef.update({
+                    balance: current + amount
+                });
+
+                out.style.color = "#22c55e";
+                out.innerText = "Muvaffaqiyatli! Oldingi: " + current + " | Yangi: " + (current + amount);
+                alert("Bajarildi!");
+
+            } catch (err) {
+                console.error(err);
+                out.style.color = "red";
+                out.innerText = "Xato: " + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "TANGA YUBORISH";
+            }
+        };
+    </script>
 </body>
 </html>
