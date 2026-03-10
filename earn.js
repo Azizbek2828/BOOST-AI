@@ -15,7 +15,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const tg = window.Telegram.WebApp;
 const userId = tg.initDataUnsafe.user?.id || 0;
-const BOT_TOKEN = "8653382126:AAF0NTKY1JaJoveDIUwfP0ovaGMexsUDZ78";
+const BOT_TOKEN = "8756409847:AAF-MdVUIQSf0HaqavXESBvHZ6UV6lsg9rw";
 
 // 1. Balansni realtime yangilash
 onValue(ref(db, `users/${userId}/balance`), (snap) => {
