@@ -6,49 +6,47 @@ const BOT_TOKEN = "8756409847:AAF-MdVUIQSf0HaqavXESBvHZ6UV6lsg9rw";
 async function loadTasks() {
     const list = document.getElementById('tasks-list');
     try {
-        // 1. Vazifalarni olish
         const res = await fetch(`${BASE_URL}/tasks`);
-        const tasks = await res.json();
+        let tasks = await res.json();
         list.innerHTML = "";
 
-        // 2. Foydalanuvchi balansini ko'rsatish
-        const uRes = await fetch(`${BASE_URL}/users?telegramID=${userId}`);
-        const uData = await uRes.json();
-        if(uData.length > 0) {
-            document.getElementById('balance-amount').innerText = uData[0].balance;
-        }
+        for (const task of tasks) {
+            // 1. Bot adminligini tekshirish (Vazifa ochiqligini tekshirish)
+            const checkBot = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${task.channel}&user_id=${BOT_TOKEN.split(':')[0]}`);
+            const botData = await checkBot.json();
 
-        if (tasks.length === 0) {
-            list.innerHTML = "<p style='text-align:center;'>Hozircha vazifalar yo'q.</p>";
-            return;
-        }
+            // Agar bot admin bo'lmasa yoki vazifa tugagan bo'lsa - O'CHIRISH
+            if (!botData.ok || botData.result.status !== 'administrator' || task.completedCount >= task.requiredSubs) {
+                await fetch(`${BASE_URL}/tasks/${task.id}`, { method: 'DELETE' });
+                continue; 
+            }
 
-        tasks.forEach(task => {
-            // Test uchun o'zimizga ham ko'rinadigan qildik
+            if (task.ownerId == userId) continue;
+
             const div = document.createElement('div');
             div.className = "glass-card task-item";
             div.innerHTML = `
                 <div>
                     <b style="color:#3b82f6;">${task.channel}</b>
-                    <p style="font-size:12px; color:#94a3b8;">Mukofot: 2 tanga</p>
+                    <p style="font-size:12px; color:#94a3b8;">Limit: ${task.completedCount}/${task.requiredSubs}</p>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:5px;">
-                    <button class="task-btn" onclick="window.open('https://t.me/${task.channel.replace('@','')}')">OBUNA BO'LISH</button>
-                    <button class="task-btn check-btn" id="btn-${task.id}" style="background:#22c55e;">TEKSHIRISH</button>
+                    <button class="task-btn" onclick="window.open('https://t.me/${task.channel.replace('@','')}')">OBUNA</button>
+                    <button class="task-btn check-btn" id="btn-${task.id}">TEKSHIRISH</button>
                 </div>
             `;
             list.appendChild(div);
             document.getElementById(`btn-${task.id}`).onclick = () => verifyTask(task.id, task);
-        });
-    } catch (e) { 
-        list.innerHTML = "Xatolik: Baza yuklanmadi.";
-        console.error(e); 
-    }
+        }
+        
+        if(list.innerHTML === "") list.innerHTML = "<p style='text-align:center;'>Vazifalar yo'q</p>";
+
+    } catch (e) { console.error(e); }
 }
 
 async function verifyTask(taskId, task) {
     const btn = document.getElementById(`btn-${taskId}`);
-    btn.innerText = "⏳..."; btn.disabled = true;
+    btn.innerText = "⏳"; btn.disabled = true;
 
     try {
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${task.channel}&user_id=${userId}`;
@@ -56,28 +54,29 @@ async function verifyTask(taskId, task) {
         const data = await res.json();
 
         if (data.ok && ['member', 'administrator', 'creator'].includes(data.result.status)) {
+            // 1. Balansni oshirish
             const uRes = await fetch(`${BASE_URL}/users?telegramID=${userId}`);
             const users = await uRes.json();
-            
-            if(users.length > 0) {
-                const newBal = (parseInt(users[0].balance) || 0) + 2;
-                await fetch(`${BASE_URL}/users/${users[0].id}`, {
-                    method: 'PUT',
-                    headers: {'content-type':'application/json'},
-                    body: JSON.stringify({ balance: newBal })
-                });
-                tg.showAlert("Muvaffaqiyatli! +2 tanga.");
-                location.reload();
-            }
+            await fetch(`${BASE_URL}/users/${users[0].id}`, {
+                method: 'PUT',
+                headers: {'content-type':'application/json'},
+                body: JSON.stringify({ balance: (parseInt(users[0].balance) || 0) + 2 })
+            });
+
+            // 2. Vazifa hisoblagichini oshirish
+            await fetch(`${BASE_URL}/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {'content-type':'application/json'},
+                body: JSON.stringify({ completedCount: parseInt(task.completedCount) + 1 })
+            });
+
+            tg.showAlert("Muvaffaqiyatli! +2 tanga.");
+            location.reload();
         } else {
-            tg.showAlert("Avval kanalga obuna bo'ling!");
+            tg.showAlert("Obuna bo'lmagansiz!");
             btn.innerText = "TEKSHIRISH"; btn.disabled = false;
         }
-    } catch (e) {
-        tg.showAlert("Xatolik! Bot kanalda admin bo'lishi shart.");
-        btn.innerText = "TEKSHIRISH"; btn.disabled = false;
-    }
+    } catch (e) { btn.disabled = false; }
 }
 
 loadTasks();
-tg.ready();
