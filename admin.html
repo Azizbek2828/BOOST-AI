@@ -4,121 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BOOST AI - Admin Panel</title>
-    <link rel="stylesheet" href="home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0b0e14; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .admin-card { background: #151921; padding: 30px; border-radius: 20px; width: 350px; border: 1px solid #2d333f; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        h2 { color: #3b82f6; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #2d333f; background: #0b0e14; color: white; box-sizing: border-box; outline: none; font-size: 16px; }
+        input:focus { border-color: #3b82f6; }
+        button { width: 100%; padding: 15px; background: #3b82f6; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; transition: 0.3s; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #1d2433; color: #4b5563; cursor: not-allowed; }
+        #msg { margin-top: 15px; font-size: 14px; color: #94a3b8; min-height: 20px; }
+    </style>
 </head>
 <body>
-    <div class="background-blobs"></div>
 
-    <div class="container" style="padding-top: 50px;">
-        <header class="glass-card user-info">
-            <div class="user-details">
-                <i class="fas fa-user-shield" style="font-size: 24px; color: #e11d48;"></i>
-                <h3 style="margin-left: 10px;">Admin Panel</h3>
-            </div>
-        </header>
+<div class="admin-card">
+    <h2>Admin Panel</h2>
+    <input type="text" id="tgId" placeholder="Telegram ID (masalan: 123456)">
+    <input type="number" id="coinAmt" placeholder="Qancha tanga qo'shilsin?">
+    <button onclick="updateData()" id="sendBtn">TANGA YUBORISH</button>
+    <p id="msg">Ma'lumotlarni kiriting va yuboring</p>
+</div>
 
-        <div class="glass-card">
-            <p style="margin-bottom: 15px; color: #94a3b8;">Foydalanuvchi balansini to'ldirish</p>
-            
-            <input type="number" id="target-id" placeholder="Telegram ID raqami" class="admin-input">
-            <input type="number" id="coin-amount" placeholder="Tanga miqdori" class="admin-input">
+<script>
+    // Siz yaratgan rasmiy API link
+    const API_URL = "https://69b1056aadac80b427c3bc97.mockapi.io/users";
 
-            <button onclick="sendCoins()" id="btn-send" class="admin-btn">
-                TANGA YUBORISH
-            </button>
-        </div>
-        <p id="status-text" style="text-align: center; color: yellow; font-size: 13px; margin-top: 15px;"></p>
-    </div>
+    async function updateData() {
+        const id = document.getElementById('tgId').value.trim();
+        const amt = parseInt(document.getElementById('coinAmt').value);
+        const msg = document.getElementById('msg');
+        const btn = document.getElementById('sendBtn');
 
-    <style>
-        .admin-input {
-            width: 100%; padding: 12px; border-radius: 10px; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            background: rgba(0,0,0,0.2); color: white; 
-            margin-bottom: 15px; outline: none; font-size: 16px;
+        if(!id || isNaN(amt)) {
+            alert("ID va miqdorni to'g'ri kiriting!");
+            return;
         }
-        .admin-btn {
-            width: 100%; background: linear-gradient(90deg, #e11d48, #f43f5e); 
-            border: none; color: white; padding: 15px; 
-            border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 16px;
-        }
-    </style>
 
-    <script>
-        // Firebase sozlamalari
-        const firebaseConfig = {
-          apiKey: "AIzaSyAxZ-mSgJhuTdGcH3T4oJym3qjGso71keM",
-          authDomain: "user1111-c84a0.firebaseapp.com",
-          databaseURL: "https://user1111-c84a0-default-rtdb.firebaseio.com",
-          projectId: "user1111-c84a0",
-          storageBucket: "user1111-c84a0.firebasestorage.app",
-          messagingSenderId: "901723757936",
-          appId: "1:901723757936:web:c94a330b79916b6b0c03b5"
-        };
+        btn.disabled = true;
+        msg.style.color = "#94a3b8";
+        msg.innerText = "Baza tekshirilmoqda...";
 
-        // Firebase-ni ishga tushirish
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        try {
+            // 1. Avval shu IDli foydalanuvchi bazada bormi ko'ramiz
+            const res = await fetch(`${API_URL}?telegramID=${id}`);
+            const users = await res.json();
 
-        async function sendCoins() {
-            const idInput = document.getElementById('target-id');
-            const coinInput = document.getElementById('coin-amount');
-            const btn = document.getElementById('btn-send');
-            const status = document.getElementById('status-text');
+            if (users && users.length > 0) {
+                // FOYDALANUVCHI BOR: Balansni yangilaymiz (PUT)
+                const user = users[0];
+                const newBalance = (parseInt(user.balance) || 0) + amt;
 
-            const targetId = idInput.value.trim();
-            const amount = parseInt(coinInput.value);
+                const putRes = await fetch(`${API_URL}/${user.id}`, {
+                    method: 'PUT',
+                    headers: {'content-type':'application/json'},
+                    body: JSON.stringify({ balance: newBalance })
+                });
 
-            if (!targetId || isNaN(amount)) {
-                alert("ID yoki miqdor xato!");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = "YUBORILMOQDA...";
-            status.innerText = "Baza bilan aloqa o'rnatilmoqda...";
-
-            try {
-                // To'g'ridan-to'g'ri "users/ID" yo'lini qidiramiz
-                const userRef = database.ref('users/' + targetId);
-                const snapshot = await userRef.once('value');
-
-                let currentBalance = 0;
-                if (snapshot.exists()) {
-                    currentBalance = snapshot.val().balance || 0;
-                    
-                    // Mavjud foydalanuvchini yangilash
-                    await userRef.update({
-                        balance: currentBalance + amount
-                    });
-                    status.innerText = "Muvaffaqiyatli yangilandi!";
-                } else {
-                    // AGAR USERS YOKI FOYDALANUVCHI BO'LMASA, YANGI YARATISH
-                    await userRef.set({
-                        balance: amount,
-                        id: targetId,
-                        first_name: "Admin tomonidan qo'shilgan"
-                    });
-                    status.innerText = "Yangi foydalanuvchi bazada yaratildi!";
+                if(putRes.ok) {
+                    msg.style.color = "#22c55e";
+                    msg.innerText = `Muvaffaqiyatli! Yangi balans: ${newBalance}`;
                 }
+            } else {
+                // FOYDALANUVCHI YO'Q: Yangi yaratamiz (POST)
+                const postRes = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'content-type':'application/json'},
+                    body: JSON.stringify({
+                        telegramID: id,
+                        balance: amt
+                    })
+                });
 
-                alert("Bajarildi! Yangi balans: " + (currentBalance + amount));
-                idInput.value = "";
-                coinInput.value = "";
-
-            } catch (error) {
-                console.error(error);
-                status.innerText = "Xato: " + error.message;
-                alert("Xatolik: " + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "TANGA YUBORISH";
+                if(postRes.ok) {
+                    msg.style.color = "#22c55e";
+                    msg.innerText = "Yangi foydalanuvchi yaratildi va tanga berildi!";
+                }
             }
+            
+            document.getElementById('coinAmt').value = "";
+        } catch (e) {
+            console.error(e);
+            msg.style.color = "#ef4444";
+            msg.innerText = "Xato: Baza bilan aloqa yo'q!";
+        } finally {
+            btn.disabled = false;
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
