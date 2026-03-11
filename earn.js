@@ -6,17 +6,25 @@ const BOT_TOKEN = "8756409847:AAF-MdVUIQSf0HaqavXESBvHZ6UV6lsg9rw";
 async function loadTasks() {
     const list = document.getElementById('tasks-list');
     try {
+        // 1. Vazifalarni olish
         const res = await fetch(`${BASE_URL}/tasks`);
         const tasks = await res.json();
         list.innerHTML = "";
 
-        // Balansni yangilab qo'yish
+        // 2. Foydalanuvchi balansini ko'rsatish
         const uRes = await fetch(`${BASE_URL}/users?telegramID=${userId}`);
         const uData = await uRes.json();
-        if(uData.length > 0) document.getElementById('balance-amount').innerText = uData[0].balance;
+        if(uData.length > 0) {
+            document.getElementById('balance-amount').innerText = uData[0].balance;
+        }
+
+        if (tasks.length === 0) {
+            list.innerHTML = "<p style='text-align:center;'>Hozircha vazifalar yo'q.</p>";
+            return;
+        }
 
         tasks.forEach(task => {
-            if (task.ownerId == userId) return;
+            // Test uchun o'zimizga ham ko'rinadigan qildik
             const div = document.createElement('div');
             div.className = "glass-card task-item";
             div.innerHTML = `
@@ -24,15 +32,18 @@ async function loadTasks() {
                     <b style="color:#3b82f6;">${task.channel}</b>
                     <p style="font-size:12px; color:#94a3b8;">Mukofot: 2 tanga</p>
                 </div>
-                <div style="display:flex; flex-direction:column;">
+                <div style="display:flex; flex-direction:column; gap:5px;">
                     <button class="task-btn" onclick="window.open('https://t.me/${task.channel.replace('@','')}')">OBUNA BO'LISH</button>
-                    <button class="task-btn check-btn" id="btn-${task.id}">TEKSHIRISH</button>
+                    <button class="task-btn check-btn" id="btn-${task.id}" style="background:#22c55e;">TEKSHIRISH</button>
                 </div>
             `;
             list.appendChild(div);
             document.getElementById(`btn-${task.id}`).onclick = () => verifyTask(task.id, task);
         });
-    } catch (e) { list.innerHTML = "Xatolik yuz berdi."; }
+    } catch (e) { 
+        list.innerHTML = "Xatolik: Baza yuklanmadi.";
+        console.error(e); 
+    }
 }
 
 async function verifyTask(taskId, task) {
@@ -59,7 +70,7 @@ async function verifyTask(taskId, task) {
                 location.reload();
             }
         } else {
-            tg.showAlert("Obuna bo'lmagansiz!");
+            tg.showAlert("Avval kanalga obuna bo'ling!");
             btn.innerText = "TEKSHIRISH"; btn.disabled = false;
         }
     } catch (e) {
@@ -69,3 +80,4 @@ async function verifyTask(taskId, task) {
 }
 
 loadTasks();
+tg.ready();
