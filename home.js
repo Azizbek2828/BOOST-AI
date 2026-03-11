@@ -1,49 +1,40 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-// 🔹 Yangilangan Firebase Konfiguratsiyasi
-const firebaseConfig = {
-  apiKey: "AIzaSyAxZ-mSgJhuTdGcH3T4oJym3qjGso71keM",
-  authDomain: "user1111-c84a0.firebaseapp.com",
-  databaseURL: "https://user1111-c84a0-default-rtdb.firebaseio.com",
-  projectId: "user1111-c84a0",
-  storageBucket: "user1111-c84a0.firebasestorage.app",
-  messagingSenderId: "901723757936",
-  appId: "1:901723757936:web:c94a330b79916b6b0c03b5",
-  measurementId: "G-W1WPZHRJX8"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
 const tg = window.Telegram.WebApp;
 const userData = tg.initDataUnsafe.user;
+const BASE_URL = "https://69b1056aadac80b427c3bc97.mockapi.io";
 
-if (userData) {
-    const userId = userData.id;
-    document.getElementById('user-name').innerText = userData.first_name;
-    document.getElementById('user-id-text').innerText = "ID: " + userId;
-    if (userData.photo_url) document.getElementById('user-photo').src = userData.photo_url;
+async function initHome() {
+    if (userData) {
+        const userId = userData.id.toString();
+        document.getElementById('user-name').innerText = userData.first_name;
+        document.getElementById('user-id-text').innerText = "ID: " + userId;
+        if (userData.photo_url) document.getElementById('user-photo').src = userData.photo_url;
 
-    // 1. Balansni realtime olish
-    const balanceRef = ref(db, 'users/' + userId + '/balance');
-    onValue(balanceRef, (snapshot) => {
-        const balance = snapshot.val() || 0;
-        document.getElementById('balance-amount').innerText = balance;
-    });
+        // 1. Foydalanuvchi balansini MockAPI dan olish
+        try {
+            const res = await fetch(`${BASE_URL}/users?telegramID=${userId}`);
+            const users = await res.json();
+            
+            if (users.length > 0) {
+                document.getElementById('balance-amount').innerText = users[0].balance;
+            } else {
+                // Yangi foydalanuvchi bo'lsa bazaga qo'shish
+                await fetch(`${BASE_URL}/users`, {
+                    method: 'POST',
+                    headers: {'content-type':'application/json'},
+                    body: JSON.stringify({ telegramID: userId, balance: 0 })
+                });
+                document.getElementById('balance-amount').innerText = "0";
+            }
+        } catch (e) { console.log("Xato:", e); }
 
-    // 2. Vazifalar sonini hisoblash
-    const tasksRef = ref(db, 'tasks');
-    onValue(tasksRef, (snapshot) => {
-        if (snapshot.exists()) {
-            const tasksCount = Object.keys(snapshot.val()).length;
-            document.getElementById('active-tasks-count').innerText = tasksCount;
-        } else {
-            document.getElementById('active-tasks-count').innerText = "0";
-        }
-    });
-} else {
-    document.getElementById('user-name').innerText = "Test User";
+        // 2. Vazifalar sonini hisoblash
+        try {
+            const taskRes = await fetch(`${BASE_URL}/tasks`);
+            const tasks = await taskRes.json();
+            document.getElementById('active-tasks-count').innerText = tasks.length;
+        } catch (e) { console.log(e); }
+    }
 }
 
+initHome();
 tg.ready();
